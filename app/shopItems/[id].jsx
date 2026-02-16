@@ -101,7 +101,7 @@ export default function EditScreen() {
         </View>
 
         <View style={styles.actions}>
-          <Pressable style={styles.primaryButton} onPress={handleSave}>
+          <Pressable style={styles.saveButton} onPress={handleSave}>
             <Text style={styles.primaryText}>Save</Text>
           </Pressable>
 
@@ -256,6 +256,13 @@ function createStyles(theme, colorScheme) {
       fontSize: 16,
       fontWeight: "600",
       color: "white",
+    },
+    saveButton: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: 12,
+      alignItems: "center",
+      backgroundColor: "#6200ee",
     },
   });
 }

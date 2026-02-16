@@ -1,4 +1,12 @@
-import { Text, View, TextInput, Pressable, StyleSheet } from "react-native";
+import {
+  Text,
+  View,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  FlatList,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useContext, useEffect } from "react";
 import { ThemeContext } from "@/context/ThemeContext";
@@ -7,7 +15,6 @@ import { Inter_500Medium, useFonts } from "@expo-google-fonts/inter";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
-import Animated, { LinearTransition } from "react-native-reanimated";
 import { data } from "@/data/shopItems";
 import { useRecoilState } from "recoil";
 import { countState } from "@/store/store";
@@ -17,7 +24,9 @@ export default function Index() {
   const [text, setText] = useState("");
   const { colorScheme, theme } = useContext(ThemeContext);
   const router = useRouter();
-
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
+  const textColor = colorScheme === "dark" ? "white" : theme.text;
   const [loaded] = useFonts({ Inter_500Medium });
 
   useEffect(() => {
@@ -40,8 +49,6 @@ export default function Index() {
   }, [shopItems]);
 
   if (!loaded) return null;
-
-  const styles = createStyles(theme, colorScheme);
 
   const addShopItem = () => {
     if (!text.trim()) return;
@@ -67,150 +74,203 @@ export default function Index() {
 
   const handlePress = (id) => router.push(`/shopItems/${id}`);
 
-  const renderHeader = () => (
-    <View style={styles.row}>
-      <Text style={[styles.cell, styles.headerCell, { flex: 1 }]}>Title</Text>
-      <Text style={[styles.cell, styles.headerCell]}>Amount</Text>
-      <Text style={[styles.cell, styles.headerCell]}>Unit</Text>
-      <Text style={[styles.cell, styles.headerCell]}>Completed</Text>
-      <Text style={[styles.cell, styles.headerCell]}>Edit</Text>
-      <Text style={[styles.cell, styles.headerCell]}>Remove</Text>
-    </View>
-  );
+  const renderHeader = () => {
+    if (!isDesktop) return null;
+    return (
+      <View style={[styles.row]}>
+        <Text style={[styles.cell, styles.headerCell, { flex: 1 }]}>Title</Text>
+        <Text style={[styles.cell, styles.headerCell]}>Amount</Text>
+        <Text style={[styles.cell, styles.headerCell]}>Unit</Text>
+        <Text style={[styles.cell, styles.headerCell]}>Completed</Text>
+        <Text style={[styles.cell, styles.headerCell]}>Edit</Text>
+        <Text style={[styles.cell, styles.headerCell]}>Remove</Text>
+      </View>
+    );
+  };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.row}>
-      <Pressable
-        onLongPress={() => toggleShopItem(item.id)}
-        style={{ flex: 1 }}
-      >
-        <Text
-          style={[styles.cell, item.completed && styles.completedText]}
-          numberOfLines={1}
+  const renderItem = ({ item }) => {
+    const textColor = colorScheme === "dark" ? "white" : theme.text;
+
+    if (isDesktop) {
+      return (
+        <View style={[styles.row]}>
+          <Pressable
+            onLongPress={() => toggleShopItem(item.id)}
+            style={{ flex: 1 }}
+          >
+            <Text
+              style={[
+                styles.cell,
+                item.completed && styles.completedText,
+                { color: textColor },
+              ]}
+              numberOfLines={1}
+            >
+              {item.title}
+            </Text>
+          </Pressable>
+          <Text style={[styles.cell, { color: textColor }]}>
+            {item.amount ?? 0}
+          </Text>
+          <Text style={[styles.cell, { color: textColor }]}>
+            {item.unit ?? "unit"}
+          </Text>
+          <Text style={[styles.cell, { color: textColor }]}>
+            {item.completed ? "✓" : "✗"}
+          </Text>
+          <Pressable
+            onPress={() => handlePress(item.id)}
+            style={styles.actionCell}
+          >
+            <MaterialCommunityIcons name="pencil" size={24} color={textColor} />
+          </Pressable>
+          <Pressable
+            onPress={() => removeShopItem(item.id)}
+            style={styles.actionCell}
+          >
+            <MaterialCommunityIcons name="delete" size={24} color="red" />
+          </Pressable>
+        </View>
+      );
+    } else {
+      return (
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor:
+                colorScheme === "dark" ? "#222" : theme.background,
+            },
+          ]}
         >
-          {item.title}
-        </Text>
-      </Pressable>
-      <Text style={styles.cell}>{item.amount ?? 0}</Text>
-      <Text style={styles.cell}>{item.unit ?? "unit"}</Text>
-      <Text style={styles.cell}>{item.completed ? "✓" : "✗"}</Text>
-      <Pressable
-        onPress={() => handlePress(item.id)}
-        style={[styles.cell, styles.actionCell]}
-      >
-        <MaterialCommunityIcons name="pencil" size={24} color={theme.text} />
-      </Pressable>
-      <Pressable
-        onPress={() => removeShopItem(item.id)}
-        style={[styles.cell, styles.actionCell]}
-      >
-        <MaterialCommunityIcons name="delete" size={24} color="red" />
-      </Pressable>
-    </View>
-  );
+          <Text
+            style={[
+              styles.cardTitle,
+              item.completed && styles.completedText,
+              { color: textColor },
+            ]}
+          >
+            {item.title}
+          </Text>
+          <Text style={{ color: textColor }}>Amount: {item.amount ?? 0}</Text>
+          <Text style={{ color: textColor }}>Unit: {item.unit ?? "unit"}</Text>
+          <Text style={{ color: textColor }}>
+            Status: {item.completed ? "Completed" : "Pending"}
+          </Text>
+          <View style={styles.cardActions}>
+            <Pressable
+              onPress={() => handlePress(item.id)}
+              style={styles.cardButton}
+            >
+              <MaterialCommunityIcons
+                name="pencil"
+                size={24}
+                color={textColor}
+              />
+            </Pressable>
+            <Pressable
+              onPress={() => removeShopItem(item.id)}
+              style={styles.cardButton}
+            >
+              <MaterialCommunityIcons name="delete" size={24} color="red" />
+            </Pressable>
+          </View>
+        </View>
+      );
+    }
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[
+        styles.container,
+        { backgroundColor: colorScheme === "dark" ? "#111" : theme.background },
+      ]}
+    >
       <View style={styles.inputContainer}>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              color: textColor,
+              borderColor: colorScheme === "dark" ? "#555" : "gray",
+            },
+          ]}
           maxLength={30}
           placeholder="Add a new item"
-          placeholderTextColor="gray"
+          placeholderTextColor={colorScheme === "dark" ? "#aaa" : "gray"}
           value={text}
           onChangeText={setText}
         />
-        <Pressable onPress={addShopItem} style={styles.addButton}>
-          <Text style={styles.addButtonText}>Add</Text>
+        <Pressable style={[styles.addButton]} onPress={addShopItem}>
+          <Text style={[styles.addButtonText]}>Add</Text>
         </Pressable>
       </View>
-      <View style={styles.table}>
-        {renderHeader()}
-        <Animated.FlatList
-          data={shopItems}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={{ flexGrow: 1 }}
-          itemLayoutAnimation={LinearTransition}
-          keyboardDismissMode="on-drag"
-        />
-      </View>
+      {renderHeader()}
+      <FlatList
+        data={shopItems}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={{ paddingBottom: 50 }}
+      />
       <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
     </SafeAreaView>
   );
 }
 
-function createStyles(theme, colorScheme) {
-  return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.background,
-    },
-    inputContainer: {
-      flexDirection: "row",
-      padding: 10,
-      gap: 8,
-      width: "100%",
-      maxWidth: 1024,
-      marginHorizontal: "auto",
-    },
-    input: {
-      flex: 1,
-      borderColor: "gray",
-      borderWidth: 1,
-      borderRadius: 5,
-      padding: 10,
-      fontSize: 16,
-      fontFamily: "Inter_500Medium",
-      color: theme.text,
-    },
-    addButton: {
-      backgroundColor: theme.button,
-      borderRadius: 5,
-      paddingHorizontal: 16,
-      justifyContent: "center",
-      alignItems: "center",
-    },
-    addButtonText: {
-      color: colorScheme === "dark" ? "black" : "white",
-      fontSize: 16,
-      fontWeight: "600",
-    },
-    table: {
-      flex: 1,
-      width: "100%",
-      maxWidth: 1024,
-      alignSelf: "center",
-      marginTop: 10,
-    },
-    row: {
-      flexDirection: "row",
-      alignItems: "center",
-      borderBottomWidth: 1,
-      borderBottomColor: "gray",
-      paddingVertical: 8,
-      paddingHorizontal: 4,
-    },
-    cell: {
-      flex: 1,
-      fontSize: 16,
-      fontFamily: "Inter_500Medium",
-      color: theme.text,
-      paddingHorizontal: 4,
-      textAlign: "center",
-    },
-    actionCell: {
-      justifyContent: "center",
-      alignItems: "center",
-      flex: 1,
-    },
-    headerCell: {
-      fontWeight: "700",
-      color: colorScheme === "dark" ? "#EEE" : "#333",
-    },
-    completedText: {
-      textDecorationLine: "line-through",
-      color: "gray",
-    },
-  });
-}
+const styles = StyleSheet.create({
+  container: { flex: 1, padding: 10 },
+  inputContainer: { flexDirection: "row", marginBottom: 10, gap: 8 },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    fontSize: 16,
+    fontFamily: "Inter_500Medium",
+  },
+  addButton: {
+    borderRadius: 5,
+    paddingHorizontal: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#6200ee",
+  },
+  addButtonText: { fontSize: 16, fontWeight: "600", color: "white" },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+    paddingVertical: 8,
+  },
+  cell: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: "Inter_500Medium",
+    paddingHorizontal: 4,
+    textAlign: "center",
+  },
+  actionCell: { justifyContent: "center", alignItems: "center", flex: 1 },
+  headerCell: { fontWeight: "700", color: "#333" },
+  completedText: { textDecorationLine: "line-through", color: "gray" },
+  card: {
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 6,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 6,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  cardTitle: { fontSize: 18, fontWeight: "600", marginBottom: 6 },
+  cardActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 8,
+    gap: 12,
+  },
+  cardButton: { padding: 6 },
+});

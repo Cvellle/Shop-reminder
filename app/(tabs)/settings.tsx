@@ -34,7 +34,7 @@ export default function Settings() {
     <SafeAreaView style={styles.container}>
       <Text style={styles.heading}>Settings</Text>
 
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: theme.background }]}>
         <Text style={styles.optionLabel}>App Theme</Text>
         <Pressable
           onPress={() =>
