@@ -4,7 +4,7 @@ import {
   TextInput,
   Pressable,
   StyleSheet,
-  FlatList,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useContext } from "react";
@@ -15,9 +15,16 @@ import { tagsState } from "@/store/store";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 const PRESET_COLORS = [
-  "#FF9800", "#E91E63", "#4CAF50", "#2196F3",
-  "#9C27B0", "#FF5722", "#00BCD4", "#8BC34A",
-  "#F44336", "#795548",
+  "#FF9800",
+  "#E91E63",
+  "#4CAF50",
+  "#2196F3",
+  "#9C27B0",
+  "#FF5722",
+  "#00BCD4",
+  "#8BC34A",
+  "#F44336",
+  "#795548",
 ];
 
 export default function TagsScreen() {
@@ -34,13 +41,18 @@ export default function TagsScreen() {
   const subColor = isDark ? "#8b949e" : "#666";
   const borderColor = isDark ? "#30363d" : "#ddd";
 
-  // Role guard — tab is hidden for basicUser but guard here too
   if (user?.role !== "advancedUser") {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: bg }]}>
         <View style={styles.locked}>
-          <MaterialCommunityIcons name="lock-outline" size={52} color="#8b949e" />
-          <Text style={[styles.lockedTitle, { color: textColor }]}>Tags locked</Text>
+          <MaterialCommunityIcons
+            name="lock-outline"
+            size={52}
+            color="#8b949e"
+          />
+          <Text style={[styles.lockedTitle, { color: textColor }]}>
+            Tags locked
+          </Text>
           <Text style={[styles.lockedSub, { color: subColor }]}>
             Add your first product to the list to unlock tag management.
           </Text>
@@ -52,7 +64,8 @@ export default function TagsScreen() {
   const addTag = () => {
     const trimmed = newTagName.trim();
     if (!trimmed) return;
-    if (tags.some((t) => t.name.toLowerCase() === trimmed.toLowerCase())) return;
+    if (tags.some((t) => t.name.toLowerCase() === trimmed.toLowerCase()))
+      return;
     const newId = tags.length ? Math.max(...tags.map((t) => t.id)) + 1 : 1;
     setTags([...tags, { id: newId, name: trimmed, color: selectedColor }]);
     setNewTagName("");
@@ -64,83 +77,92 @@ export default function TagsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: bg }]}>
-      <Text style={[styles.heading, { color: textColor }]}>Tags</Text>
-      <Text style={[styles.subheading, { color: subColor }]}>
-        Organize products with tags
-      </Text>
-
-      {/* Add new tag card */}
-      <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
-        <Text style={[styles.cardTitle, { color: textColor }]}>New tag</Text>
-
-        <TextInput
-          style={[styles.input, { color: textColor, borderColor }]}
-          placeholder="Tag name (e.g. Breakfast)"
-          placeholderTextColor={subColor}
-          value={newTagName}
-          onChangeText={setNewTagName}
-          onSubmitEditing={addTag}
-          returnKeyType="done"
-          maxLength={24}
-        />
-
-        <Text style={[styles.colorLabel, { color: subColor }]}>Color</Text>
-        <View style={styles.colorRow}>
-          {PRESET_COLORS.map((c) => (
-            <Pressable
-              key={c}
-              style={[
-                styles.colorDot,
-                { backgroundColor: c },
-                selectedColor === c && styles.colorDotSelected,
-              ]}
-              onPress={() => setSelectedColor(c)}
-            />
-          ))}
-        </View>
-
-        {newTagName.trim().length > 0 && (
-          <View style={styles.previewRow}>
-            <Text style={[styles.colorLabel, { color: subColor }]}>Preview:</Text>
-            <View
-              style={[
-                styles.tagBadge,
-                { backgroundColor: selectedColor + "28", borderColor: selectedColor },
-              ]}
-            >
-              <Text style={[styles.tagText, { color: selectedColor }]}>
-                {newTagName.trim()}
-              </Text>
-            </View>
-          </View>
-        )}
-
-        <Pressable style={styles.addButton} onPress={addTag}>
-          <Text style={styles.addButtonText}>Add tag</Text>
-        </Pressable>
-      </View>
-
-      {/* Existing tags list */}
-      <View style={[styles.card, { backgroundColor: cardBg, borderColor, flex: 1 }]}>
-        <Text style={[styles.cardTitle, { color: textColor }]}>
-          All tags ({tags.length})
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <Text style={[styles.heading, { color: textColor }]}>Tags</Text>
+        <Text style={[styles.subheading, { color: subColor }]}>
+          Organize products with tags
         </Text>
 
-        {tags.length === 0 ? (
-          <Text style={[styles.emptyText, { color: subColor }]}>
-            No tags yet — add one above.
+        <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+          <Text style={[styles.cardTitle, { color: textColor }]}>New tag</Text>
+
+          <TextInput
+            style={[styles.input, { color: textColor, borderColor }]}
+            placeholder="Tag name (e.g. Breakfast)"
+            placeholderTextColor={subColor}
+            value={newTagName}
+            onChangeText={setNewTagName}
+            onSubmitEditing={addTag}
+            returnKeyType="done"
+            maxLength={24}
+          />
+
+          <Text style={[styles.colorLabel, { color: subColor }]}>Color</Text>
+          <View style={styles.colorRow}>
+            {PRESET_COLORS.map((c) => (
+              <Pressable
+                key={c}
+                style={[
+                  styles.colorDot,
+                  { backgroundColor: c },
+                  selectedColor === c && styles.colorDotSelected,
+                ]}
+                onPress={() => setSelectedColor(c)}
+              />
+            ))}
+          </View>
+
+          {newTagName.trim().length > 0 && (
+            <View style={styles.previewRow}>
+              <Text style={[styles.colorLabel, { color: subColor }]}>
+                Preview:
+              </Text>
+              <View
+                style={[
+                  styles.tagBadge,
+                  {
+                    backgroundColor: selectedColor + "28",
+                    borderColor: selectedColor,
+                  },
+                ]}
+              >
+                <Text style={[styles.tagText, { color: selectedColor }]}>
+                  {newTagName.trim()}
+                </Text>
+              </View>
+            </View>
+          )}
+
+          <Pressable style={styles.addButton} onPress={addTag}>
+            <Text style={styles.addButtonText}>Add tag</Text>
+          </Pressable>
+        </View>
+
+        <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+          <Text style={[styles.cardTitle, { color: textColor }]}>
+            All tags ({tags.length})
           </Text>
-        ) : (
-          <FlatList
-            data={tags}
-            keyExtractor={(item) => item.id.toString()}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <View style={[styles.tagRow, { borderBottomColor: borderColor }]}>
+
+          {tags.length === 0 ? (
+            <Text style={[styles.emptyText, { color: subColor }]}>
+              No tags yet — add one above.
+            </Text>
+          ) : (
+            tags.map((item) => (
+              <View
+                key={item.id.toString()}
+                style={[styles.tagRow, { borderBottomColor: borderColor }]}
+              >
                 <View
                   style={[
                     styles.tagBadge,
-                    { backgroundColor: item.color + "28", borderColor: item.color },
+                    {
+                      backgroundColor: item.color + "28",
+                      borderColor: item.color,
+                    },
                   ]}
                 >
                   <Text style={[styles.tagText, { color: item.color }]}>
@@ -148,19 +170,24 @@ export default function TagsScreen() {
                   </Text>
                 </View>
                 <Pressable onPress={() => removeTag(item.id)} hitSlop={8}>
-                  <MaterialCommunityIcons name="delete-outline" size={22} color="#f85149" />
+                  <MaterialCommunityIcons
+                    name="delete-outline"
+                    size={22}
+                    color="#f85149"
+                  />
                 </Pressable>
               </View>
-            )}
-          />
-        )}
-      </View>
+            ))
+          )}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { flex: 1 },
+  scrollContent: { padding: 16, paddingBottom: 40 },
   heading: { fontSize: 28, fontWeight: "700", marginBottom: 2 },
   subheading: { fontSize: 14, marginBottom: 16 },
   card: {
