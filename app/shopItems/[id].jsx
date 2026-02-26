@@ -15,26 +15,32 @@ import { StatusBar } from "expo-status-bar";
 import { Inter_500Medium, useFonts } from "@expo-google-fonts/inter";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRecoilState } from "recoil";
-import { countState, unitsState } from "@/store/store";
+import { countState, unitsState, tagsState } from "@/store/store";
+import { useAuth } from "@/context/AuthContext";
+import UserHeader from "@/components/UserHeader";
 
 export default function EditScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const [shopItems, setShopItems] = useRecoilState(countState);
   const [shopItem, setShopItem] = useState(null);
-  const [units, setUnits] = useRecoilState(unitsState);
+  const [units] = useRecoilState(unitsState);
+  const [tags] = useRecoilState(tagsState);
   const { colorScheme, theme } = useContext(ThemeContext);
+  const { user } = useAuth();
   const [loaded] = useFonts({ Inter_500Medium });
+  const isAdvanced = user?.role === "advancedUser";
 
   useEffect(() => {
     if (!id) return;
     const item = shopItems.find((i) => i.id.toString() === id);
-    if (item) setShopItem(item);
+    if (item) setShopItem({ ...item, tags: item.tags || [] });
   }, [id, shopItems]);
 
   if (!loaded || !shopItem) return null;
 
   const styles = createStyles(theme, colorScheme);
+  const isDark = colorScheme === "dark";
 
   const handleSave = async () => {
     const updatedItems = shopItems.map((i) =>
@@ -45,10 +51,18 @@ export default function EditScreen() {
     router.replace("/");
   };
 
+  const toggleTag = (tagId) => {
+    const current = shopItem.tags || [];
+    const next = current.includes(tagId)
+      ? current.filter((t) => t !== tagId)
+      : [...current, tagId];
+    setShopItem({ ...shopItem, tags: next });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
+      <UserHeader />
       <View style={styles.wrapper}>
-        {/* CARD */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Item Details</Text>
           <DetailRow label="Title">
@@ -100,6 +114,57 @@ export default function EditScreen() {
           </DetailRow>
         </View>
 
+        {isAdvanced && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Tags</Text>
+            <Text style={styles.tagsHint}>
+              Tap a tag to toggle it on this item
+            </Text>
+            {tags.length === 0 ? (
+              <Text style={styles.tagsEmpty}>
+                No tags yet — create some in the Tags tab.
+              </Text>
+            ) : (
+              <View style={styles.tagsGrid}>
+                {tags.map((tag) => {
+                  const active = (shopItem.tags || []).includes(tag.id);
+                  return (
+                    <Pressable
+                      key={tag.id}
+                      onPress={() => toggleTag(tag.id)}
+                      style={[
+                        styles.tagChip,
+                        {
+                          backgroundColor: active
+                            ? tag.color + "40"
+                            : tag.color + "12",
+                          borderColor: tag.color,
+                          borderWidth: active ? 2 : 1,
+                        },
+                      ]}
+                    >
+                      {active && (
+                        <Text style={{ fontSize: 11, marginRight: 3 }}>✓</Text>
+                      )}
+                      <Text
+                        style={[
+                          styles.tagChipText,
+                          {
+                            color: tag.color,
+                            fontWeight: active ? "700" : "500",
+                          },
+                        ]}
+                      >
+                        {tag.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        )}
+
         <View style={styles.actions}>
           <Pressable style={styles.saveButton} onPress={handleSave}>
             <Text style={styles.primaryText}>Save</Text>
@@ -114,7 +179,7 @@ export default function EditScreen() {
         </View>
       </View>
 
-      <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+      <StatusBar style={isDark ? "light" : "dark"} />
     </SafeAreaView>
   );
 }
@@ -180,6 +245,7 @@ const badgeStyles = StyleSheet.create({
 });
 
 function createStyles(theme, colorScheme) {
+  const isDark = colorScheme === "dark";
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -193,7 +259,7 @@ function createStyles(theme, colorScheme) {
       gap: 24,
     },
     card: {
-      backgroundColor: colorScheme === "dark" ? "#1E1E1E" : "#FFFFFF",
+      backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
       borderRadius: 18,
       padding: 20,
       shadowColor: "#000",
@@ -207,6 +273,32 @@ function createStyles(theme, colorScheme) {
       marginBottom: 16,
       fontFamily: "Inter_500Medium",
       color: theme.text,
+    },
+    tagsHint: {
+      fontSize: 12,
+      color: isDark ? "#8b949e" : "#888",
+      marginBottom: 12,
+      marginTop: -10,
+    },
+    tagsEmpty: {
+      fontSize: 13,
+      color: isDark ? "#8b949e" : "#888",
+      fontStyle: "italic",
+    },
+    tagsGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    tagChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+    },
+    tagChipText: {
+      fontSize: 13,
     },
     input: {
       minWidth: 60,
@@ -225,20 +317,9 @@ function createStyles(theme, colorScheme) {
       gap: 8,
       flex: 1,
     },
-    picker: {
-      height: 40,
-      width: 100,
-    },
     actions: {
       flexDirection: "row",
       gap: 12,
-    },
-    primaryButton: {
-      flex: 1,
-      backgroundColor: theme.button,
-      paddingVertical: 14,
-      borderRadius: 12,
-      alignItems: "center",
     },
     primaryText: {
       fontSize: 16,

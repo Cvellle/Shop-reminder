@@ -1,6 +1,6 @@
 import { ThemeContext } from "@/context/ThemeContext";
 import { Octicons } from "@expo/vector-icons";
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState } from "react";
 import {
   Text,
   StyleSheet,
