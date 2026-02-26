@@ -63,23 +63,24 @@ export default function TagsScreen() {
 
   const addTag = () => {
     const trimmed = newTagName.trim();
-    if (!trimmed) return;
-    if (tags.some((t) => t.name.toLowerCase() === trimmed.toLowerCase()))
+    if (
+      !trimmed ||
+      tags.some((t) => t.name.toLowerCase() === trimmed.toLowerCase())
+    )
       return;
     const newId = tags.length ? Math.max(...tags.map((t) => t.id)) + 1 : 1;
     setTags([...tags, { id: newId, name: trimmed, color: selectedColor }]);
     setNewTagName("");
   };
 
-  const removeTag = (id) => {
-    setTags(tags.filter((t) => t.id !== id));
-  };
+  const removeTag = (id) => setTags(tags.filter((t) => t.id !== id));
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: bg }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        alwaysBounceVertical={true}
       >
         <Text style={[styles.heading, { color: textColor }]}>Tags</Text>
         <Text style={[styles.subheading, { color: subColor }]}>
@@ -88,7 +89,6 @@ export default function TagsScreen() {
 
         <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
           <Text style={[styles.cardTitle, { color: textColor }]}>New tag</Text>
-
           <TextInput
             style={[styles.input, { color: textColor, borderColor }]}
             placeholder="Tag name (e.g. Breakfast)"
@@ -145,7 +145,6 @@ export default function TagsScreen() {
           <Text style={[styles.cardTitle, { color: textColor }]}>
             All tags ({tags.length})
           </Text>
-
           {tags.length === 0 ? (
             <Text style={[styles.emptyText, { color: subColor }]}>
               No tags yet — add one above.
@@ -186,8 +185,14 @@ export default function TagsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 40 },
+  container: {
+    flex: 1, // Crucial: SafeAreaView must take up whole space
+  },
+  scrollContent: {
+    flexGrow: 1, // Crucial: Allows content to be larger than screen
+    padding: 16,
+    paddingBottom: 60,
+  },
   heading: { fontSize: 28, fontWeight: "700", marginBottom: 2 },
   subheading: { fontSize: 14, marginBottom: 16 },
   card: {
@@ -207,11 +212,7 @@ const styles = StyleSheet.create({
   },
   colorLabel: { fontSize: 13 },
   colorRow: { flexDirection: "row", gap: 10, flexWrap: "wrap" },
-  colorDot: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-  },
+  colorDot: { width: 28, height: 28, borderRadius: 14 },
   colorDotSelected: {
     borderWidth: 3,
     borderColor: "white",
