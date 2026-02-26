@@ -5,6 +5,8 @@ import {
   Pressable,
   StyleSheet,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useContext } from "react";
@@ -77,121 +79,128 @@ export default function TagsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: bg }]}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        alwaysBounceVertical={true}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <Text style={[styles.heading, { color: textColor }]}>Tags</Text>
-        <Text style={[styles.subheading, { color: subColor }]}>
-          Organize products with tags
-        </Text>
-
-        <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
-          <Text style={[styles.cardTitle, { color: textColor }]}>New tag</Text>
-          <TextInput
-            style={[styles.input, { color: textColor, borderColor }]}
-            placeholder="Tag name (e.g. Breakfast)"
-            placeholderTextColor={subColor}
-            value={newTagName}
-            onChangeText={setNewTagName}
-            onSubmitEditing={addTag}
-            returnKeyType="done"
-            maxLength={24}
-          />
-
-          <Text style={[styles.colorLabel, { color: subColor }]}>Color</Text>
-          <View style={styles.colorRow}>
-            {PRESET_COLORS.map((c) => (
-              <Pressable
-                key={c}
-                style={[
-                  styles.colorDot,
-                  { backgroundColor: c },
-                  selectedColor === c && styles.colorDotSelected,
-                ]}
-                onPress={() => setSelectedColor(c)}
-              />
-            ))}
-          </View>
-
-          {newTagName.trim().length > 0 && (
-            <View style={styles.previewRow}>
-              <Text style={[styles.colorLabel, { color: subColor }]}>
-                Preview:
-              </Text>
-              <View
-                style={[
-                  styles.tagBadge,
-                  {
-                    backgroundColor: selectedColor + "28",
-                    borderColor: selectedColor,
-                  },
-                ]}
-              >
-                <Text style={[styles.tagText, { color: selectedColor }]}>
-                  {newTagName.trim()}
-                </Text>
-              </View>
-            </View>
-          )}
-
-          <Pressable style={styles.addButton} onPress={addTag}>
-            <Text style={styles.addButtonText}>Add tag</Text>
-          </Pressable>
-        </View>
-
-        <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
-          <Text style={[styles.cardTitle, { color: textColor }]}>
-            All tags ({tags.length})
+        <ScrollView
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={[styles.heading, { color: textColor }]}>Tags</Text>
+          <Text style={[styles.subheading, { color: subColor }]}>
+            Organize products with tags
           </Text>
-          {tags.length === 0 ? (
-            <Text style={[styles.emptyText, { color: subColor }]}>
-              No tags yet — add one above.
+
+          <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+            <Text style={[styles.cardTitle, { color: textColor }]}>
+              New tag
             </Text>
-          ) : (
-            tags.map((item) => (
-              <View
-                key={item.id.toString()}
-                style={[styles.tagRow, { borderBottomColor: borderColor }]}
-              >
+            <TextInput
+              style={[styles.input, { color: textColor, borderColor }]}
+              placeholder="Tag name (e.g. Breakfast)"
+              placeholderTextColor={subColor}
+              value={newTagName}
+              onChangeText={setNewTagName}
+              onSubmitEditing={addTag}
+              returnKeyType="done"
+              maxLength={24}
+            />
+
+            <Text style={[styles.colorLabel, { color: subColor }]}>Color</Text>
+            <View style={styles.colorRow}>
+              {PRESET_COLORS.map((c) => (
+                <Pressable
+                  key={c}
+                  style={[
+                    styles.colorDot,
+                    { backgroundColor: c },
+                    selectedColor === c && styles.colorDotSelected,
+                  ]}
+                  onPress={() => setSelectedColor(c)}
+                />
+              ))}
+            </View>
+
+            {newTagName.trim().length > 0 && (
+              <View style={styles.previewRow}>
+                <Text style={[styles.colorLabel, { color: subColor }]}>
+                  Preview:
+                </Text>
                 <View
                   style={[
                     styles.tagBadge,
                     {
-                      backgroundColor: item.color + "28",
-                      borderColor: item.color,
+                      backgroundColor: selectedColor + "28",
+                      borderColor: selectedColor,
                     },
                   ]}
                 >
-                  <Text style={[styles.tagText, { color: item.color }]}>
-                    {item.name}
+                  <Text style={[styles.tagText, { color: selectedColor }]}>
+                    {newTagName.trim()}
                   </Text>
                 </View>
-                <Pressable onPress={() => removeTag(item.id)} hitSlop={8}>
-                  <MaterialCommunityIcons
-                    name="delete-outline"
-                    size={22}
-                    color="#f85149"
-                  />
-                </Pressable>
               </View>
-            ))
-          )}
-        </View>
-      </ScrollView>
+            )}
+
+            <Pressable style={styles.addButton} onPress={addTag}>
+              <Text style={styles.addButtonText}>Add tag</Text>
+            </Pressable>
+          </View>
+
+          <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+            <Text style={[styles.cardTitle, { color: textColor }]}>
+              All tags ({tags.length})
+            </Text>
+            {tags.length === 0 ? (
+              <Text style={[styles.emptyText, { color: subColor }]}>
+                No tags yet — add one above.
+              </Text>
+            ) : (
+              tags.map((item) => (
+                <View
+                  key={item.id.toString()}
+                  style={[styles.tagRow, { borderBottomColor: borderColor }]}
+                >
+                  <View
+                    style={[
+                      styles.tagBadge,
+                      {
+                        backgroundColor: item.color + "28",
+                        borderColor: item.color,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.tagText, { color: item.color }]}>
+                      {item.name}
+                    </Text>
+                  </View>
+                  <Pressable onPress={() => removeTag(item.id)} hitSlop={8}>
+                    <MaterialCommunityIcons
+                      name="delete-outline"
+                      size={22}
+                      color="#f85149"
+                    />
+                  </Pressable>
+                </View>
+              ))
+            )}
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // Crucial: SafeAreaView must take up whole space
+    flex: 1,
   },
   scrollContent: {
-    flexGrow: 1, // Crucial: Allows content to be larger than screen
     padding: 16,
-    paddingBottom: 60,
+    paddingBottom: 120,
   },
   heading: { fontSize: 28, fontWeight: "700", marginBottom: 2 },
   subheading: { fontSize: 14, marginBottom: 16 },
